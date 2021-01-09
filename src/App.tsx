@@ -73,7 +73,7 @@ const SkillColor = styled.div < { opacity: number }> `
 
 const App = () => {
   const [question, setQuestion] = useState<string>('')
-  const [id, setId] = useState<number>(0)
+  const [id, setId] = useState<string>('4.0')
   const [skills, setSkills] = useState<number[]>(new Array(96).fill(0))
   const [results, setResults] = useState<{ answer_result: number, lo_id: string }[]>(
     Array(51).fill(
@@ -115,6 +115,27 @@ const App = () => {
     results.shift()
     results.push({ lo_id: '4', answer_result: 1 })
     setResults(results)
+    fetch('http://0.0.0.0:5000/understandAnalysis', {
+      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      mode: 'cors', // no-cors, *cors, same-origin
+      // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      // credentials: 'same-origin', // include, *same-origin, omit
+      headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      // redirect: 'follow', // manual, *follow, error
+      // referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+      body: JSON.stringify({ history: results }) // body data type must match "Content-Type" header
+    }).then((res) => {
+      res.json().then(v => {
+        console.log(v.result)
+        const newSkills = v.result.map((ls: any) => {
+          return ls.skill_pred
+        })
+        setSkills(newSkills)
+      })
+    })
   }
   return (
     <Main>
@@ -123,8 +144,8 @@ const App = () => {
           <div dangerouslySetInnerHTML={{ __html: question }} />
         </Question>
         <Answer>
-        <Button onClick={handleResult0}>Wrong</Button>
-        <Button onClick={handleResult1}>Correct</Button>
+          <Button onClick={handleResult0}>Wrong</Button>
+          <Button onClick={handleResult1}>Correct</Button>
         </Answer>
         <History>
           <h3>All skills</h3>
@@ -137,12 +158,8 @@ const App = () => {
           ))}
         </History>
       </Frame>
-      <Navigation>
-        <Button onClick={() => { setId(id - 1) }}>Prev</Button>
-        <Button onClick={() => { setId(id + 1) }}>Next</Button>
-      </Navigation>
     </Main>
-  );
+  )
 }
 
 
